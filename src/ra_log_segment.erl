@@ -425,7 +425,7 @@ recover_index(Fd, Version, MaxCount) ->
     end.
 
 dump_index(File) ->
-    {ok, Fd} = file:open(File, [read, raw, binary
+    {ok, Fd} = afile:open(File, [read, raw, binary
                                ]),
     {ok, Version, MaxCount} = read_header(Fd),
     IndexSize = MaxCount * index_record_size(Version),
@@ -436,10 +436,10 @@ dump_index(File) ->
                      % {ok, B} = file:read(Fd, N),
                      {I, T, O}
                  end || {I, T, O, _N} <- dump_index_data(Data, [])],
-            _ = file:close(Fd),
+            _ = afile:close(Fd),
             D;
         eof ->
-            _ = file:close(Fd),
+            _ = afile:close(Fd),
             % if no entries have been written the file hasn't "stretched"
             % to where the data offset starts.
             DataOffset = ?HEADER_SIZE + IndexSize,

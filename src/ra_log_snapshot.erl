@@ -58,11 +58,11 @@ write(Dir, Meta, MacState) ->
 
 begin_accept(SnapDir, Meta) ->
     File = filename(SnapDir),
-    {ok, Fd} = file:open(File, [write, binary, raw]),
+    {ok, Fd} = afile:open(File, [write, binary, raw]),
     MetaBin = term_to_binary(Meta),
     Data = [<<(size(MetaBin)):32/unsigned>>, MetaBin],
     PartialCrc = erlang:crc32(Data),
-    ok = file:write(Fd, [<<?MAGIC,
+    ok = afile:write(Fd, [<<?MAGIC,
                            ?VERSION:8/unsigned,
                            0:32/integer>>,
                          Data]),
@@ -72,7 +72,7 @@ accept_chunk(Chunk, {PartialCrc, Fd}) ->
     <<Crc:32/integer, Rest/binary>> = Chunk,
     accept_chunk(Rest, {PartialCrc, Crc, Fd});
 accept_chunk(Chunk, {PartialCrc0, Crc, Fd}) ->
-    ok = file:write(Fd, Chunk),
+    ok = afile:write(Fd, Chunk),
     PartialCrc = erlang:crc32(PartialCrc0, Chunk),
     {ok, {PartialCrc, Crc, Fd}}.
 
@@ -80,16 +80,16 @@ complete_accept(Chunk, {PartialCrc, Fd}) ->
     <<Crc:32/integer, Rest/binary>> = Chunk,
     complete_accept(Rest, {PartialCrc, Crc, Fd});
 complete_accept(Chunk, {PartialCrc0, Crc, Fd}) ->
-    ok = file:write(Fd, Chunk),
-    ok = file:pwrite(Fd, 5, <<Crc:32/integer>>),
+    ok = afile:write(Fd, Chunk),
+    ok = afile:pwrite(Fd, 5, <<Crc:32/integer>>),
     Crc = erlang:crc32(PartialCrc0, Chunk),
-    ok = file:sync(Fd),
-    ok = file:close(Fd),
+    ok = afile:sync(Fd),
+    ok = afile:close(Fd),
     ok.
 
 begin_read(Dir) ->
     File = filename(Dir),
-    case file:open(File, [read, binary, raw]) of
+    case afile:open(File, [read, binary, raw]) of
         {ok, Fd} ->
             case read_meta_internal(Fd) of
                 {ok, Meta, Crc} ->
@@ -97,7 +97,7 @@ begin_read(Dir) ->
                     {ok, Eof} = file:position(Fd, eof),
                     {ok, Meta, {Crc, {DataStart, Eof, Fd}}};
                 {error, _} = Err ->
-                    _ = file:close(Fd),
+                    _ = afile:close(Fd),
                     Err
             end;
         Err ->
@@ -116,7 +116,7 @@ read_chunk({Pos, Eof, Fd}, Size, _Dir) ->
         {ok, Data} ->
             case Pos + Size >= Eof of
                 true ->
-                    _ = file:close(Fd),
+                    _ = afile:close(Fd),
                     {ok, Data, last};
                 false ->
                     {ok, Data, {next, {Pos + Size, Eof, Fd}}}
@@ -161,14 +161,14 @@ validate(Dir) ->
                           file_err()}.
 read_meta(Dir) ->
     File = filename(Dir),
-    case file:open(File, [read, binary, raw]) of
+    case afile:open(File, [read, binary, raw]) of
         {ok, Fd} ->
             case read_meta_internal(Fd) of
                 {ok, Meta, _} ->
-                    _ = file:close(Fd),
+                    _ = afile:close(Fd),
                     {ok, Meta};
                 {error, _} = Err ->
-                    _ = file:close(Fd),
+                    _ = afile:close(Fd),
                     Err
             end;
         Err ->

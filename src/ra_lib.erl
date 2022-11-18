@@ -228,7 +228,7 @@ make_dir(Dir) ->
     end.
 
 handle_ensure_dir(ok, Dir) ->
-    handle_make_dir(prim_file:make_dir(Dir));
+    handle_make_dir(aprim_file:make_dir(Dir));
 handle_ensure_dir(Error, _Dir) ->
     Error.
 
@@ -310,19 +310,19 @@ retry(Func, Attempt, Sleep) ->
 
 
 write_file(Name, IOData) ->
-    case file:open(Name, [binary, write, raw]) of
+    case afile:open(Name, [binary, write, raw]) of
         {ok, Fd} ->
-            case file:write(Fd, IOData) of
+            case afile:write(Fd, IOData) of
                 ok ->
-                    case file:sync(Fd) of
+                    case afile:sync(Fd) of
                         ok ->
-                            file:close(Fd);
+                            afile:close(Fd);
                         Err ->
-                            _ = file:close(Fd),
+                            _ = afile:close(Fd),
                             Err
                     end;
                 Err ->
-                    _ = file:close(Fd),
+                    _ = afile:close(Fd),
                     Err
             end;
         Err ->
@@ -429,7 +429,7 @@ ensure_dir(F) ->
             {error, einval};
         false ->
             _ = ensure_dir(Dir),
-            case prim_file:make_dir(Dir) of
+            case aprim_file:make_dir(Dir) of
                 {error, eexist} = EExist ->
                     case is_dir(Dir) of
                         true ->

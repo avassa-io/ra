@@ -25,24 +25,24 @@
 
 open(File, Modes) ->
     gen_server:cast(?MODULE, {open, self()}),
-    update(io_file_handle_open_attempt, fun() -> file:open(File, Modes) end).
+    update(io_file_handle_open_attempt, fun() -> afile:open(File, Modes) end).
 
 close(Fd) ->
     gen_server:cast(?MODULE, {close, self()}),
-    file:close(Fd).
+    afile:close(Fd).
 
 sync(Fd) ->
-    update(io_sync, fun() -> file:sync(Fd) end).
+    update(io_sync, fun() -> afile:sync(Fd) end).
 
 datasync(Fd) ->
-    update(io_sync, fun() -> file:datasync(Fd) end).
+    update(io_sync, fun() -> afile:datasync(Fd) end).
 
 %% called when wal does not sync at all
 none(_Fd) ->
     ok.
 
 write(Fd, Bytes) ->
-    update(io_write, iolist_size(Bytes), fun() -> file:write(Fd, Bytes) end).
+    update(io_write, iolist_size(Bytes), fun() -> afile:write(Fd, Bytes) end).
 
 read(Fd, Bytes) ->
     update(io_read, Bytes, fun() -> file:read(Fd, Bytes) end).
@@ -51,11 +51,11 @@ position(Fd, Location) ->
     update(io_seek, fun() -> file:position(Fd, Location) end).
 
 pwrite(Fd, LocBytes) ->
-    update(io_write, fun() -> file:pwrite(Fd, LocBytes) end).
+    update(io_write, fun() -> afile:pwrite(Fd, LocBytes) end).
 
 pwrite(Fd, Location, Bytes) ->
     update(io_write, iolist_size(Bytes),
-           fun() -> file:pwrite(Fd, Location, Bytes) end).
+           fun() -> afile:pwrite(Fd, Location, Bytes) end).
 
 pread(Fd, LocBytes) ->
     update(io_read, fun() -> file:pread(Fd, LocBytes) end).
